@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'admin@pms.com'],
             [
                 'name' => 'System Admin',
-                'password' => 'password',
+                'password' => bcrypt('password'),
                 'role' => UserRole::Admin,
             ]
         );
@@ -29,7 +29,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'manager@pms.com'],
             [
                 'name' => 'Production Manager',
-                'password' => 'password',
+                'password' => bcrypt('password'),
                 'role' => UserRole::Manager,
             ]
         );
@@ -38,7 +38,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'operator@pms.com'],
             [
                 'name' => 'Floor Operator',
-                'password' => 'password',
+                'password' => bcrypt('password'),
                 'role' => UserRole::Operator,
             ]
         );

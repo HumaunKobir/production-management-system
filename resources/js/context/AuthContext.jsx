@@ -13,14 +13,27 @@ export function AuthProvider({ children }) {
       const res = await api.me();
       setUser(res.user);
       return res.user;
-    } catch {
+    } catch (error) {
+      if (error?.status !== 401) {
+        console.warn('Auth refresh failed:', error);
+      }
       setUser(null);
       return null;
     }
   }, []);
 
   useEffect(() => {
-    refreshUser().finally(() => setLoading(false));
+    let isMounted = true;
+
+    refreshUser().finally(() => {
+      if (isMounted) {
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
   }, [refreshUser]);
 
   const login = async (email, password, remember = false) => {
