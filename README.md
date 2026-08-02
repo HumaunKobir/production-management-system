@@ -118,6 +118,36 @@ The seeded data uses a steel manufacturing example:
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/traceability/finished-batch/{id}` | Full trace from finished batch to raw materials |
+| GET | `/api/production/{id}` | Production batch details with full trace chain |
+
+### Recipes (Bill of Materials)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET/POST | `/api/recipes/raw-to-semi` | List / create raw → semi recipes |
+| PUT/DELETE | `/api/recipes/raw-to-semi/{id}` | Update / delete recipe |
+| GET/POST | `/api/recipes/semi-to-finished` | List / create semi → finished recipes |
+| PUT/DELETE | `/api/recipes/semi-to-finished/{id}` | Update / delete recipe |
+
+## Assignment Requirements Checklist
+
+| # | Requirement | Status | Implementation |
+|---|-------------|--------|----------------|
+| 1 | Data Model | ✅ | 11 migrations: products, batches, recipes, production_inputs, production_events |
+| 2 | Inventory Management | ✅ | FIFO allocation, sync validation, async deduction via worker |
+| 3 | Batch Traceability | ✅ | `TraceabilityService` — finished → semi → raw material chain |
+| 4 | RESTful API | ✅ | CRUD for 3 product types, recipes, inventory, production, traceability |
+| 5 | RabbitMQ Integration | ✅ | `ProcessProductionBatch` job on `production` queue, separate worker |
+| 6 | Docker Compose | ✅ | `docker compose up --build` — app, MySQL, RabbitMQ, queue-worker |
+| 7 | React Frontend | ✅ | `resources/js` + `resources/views/app.blade.php` |
+
+### Tests
+
+```bash
+php artisan test --filter=ProductionManagementTest
+```
+
+Tests cover: authentication, inventory receive, production flow, insufficient inventory rejection, full traceability chain, and recipe CRUD.
 
 ## Example Workflow
 

@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
-    && docker-php-ext-install pdo_mysql zip \
+    && docker-php-ext-install pdo_mysql pdo_sqlite zip \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -20,6 +20,9 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
 COPY . .
 RUN composer dump-autoload --optimize
 
+RUN chmod +x docker-entrypoint.sh
+
+ENTRYPOINT ["./docker-entrypoint.sh"]
 EXPOSE 8000
 
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]

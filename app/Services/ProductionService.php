@@ -23,6 +23,7 @@ class ProductionService
 {
     public function __construct(
         private readonly InventoryService $inventoryService,
+        private readonly ProductionNotificationService $notificationService,
     ) {}
 
     public function initiateRawToSemiProduction(
@@ -133,6 +134,7 @@ class ProductionService
                 ]);
 
                 $this->logEvent($batch, 'production_completed', 'Production completed successfully.');
+                $this->notificationService->notifyProductionCompleted($batch->fresh());
                 Log::info("Production batch {$batch->batch_number} completed.");
             } catch (\Throwable $e) {
                 $batch->update([
@@ -141,6 +143,7 @@ class ProductionService
                 ]);
 
                 $this->logEvent($batch, 'production_failed', $e->getMessage());
+                $this->notificationService->notifyProductionFailed($batch->fresh(), $e->getMessage());
                 Log::error("Production batch {$batch->batch_number} failed: {$e->getMessage()}");
 
                 throw $e;

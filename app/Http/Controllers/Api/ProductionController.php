@@ -51,7 +51,7 @@ class ProductionController extends Controller
                 'message' => 'Production batch queued for processing.',
                 'data' => $batch,
             ], 202);
-        } catch (\RuntimeException $e) {
+        } catch (\RuntimeException|\InvalidArgumentException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }
     }
@@ -77,7 +77,7 @@ class ProductionController extends Controller
                 'message' => 'Production batch queued for processing.',
                 'data' => $batch,
             ], 202);
-        } catch (\RuntimeException $e) {
+        } catch (\RuntimeException|\InvalidArgumentException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }
     }

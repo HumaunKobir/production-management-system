@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\FinishedProductController;
 use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\ProductionController;
 use App\Http\Controllers\Api\RawMaterialController;
+use App\Http\Controllers\Api\RecipeController;
 use App\Http\Controllers\Api\SemiFinishedProductController;
 use App\Http\Controllers\Api\TraceabilityController;
 use App\Http\Controllers\Api\UserController;
@@ -31,6 +32,9 @@ Route::middleware('web')->group(function () {
         Route::get('production/{productionBatch}', [ProductionController::class, 'show']);
         Route::get('traceability/finished-batch/{finishedProductBatch}', [TraceabilityController::class, 'traceFinishedBatch']);
 
+        Route::get('recipes/raw-to-semi', [RecipeController::class, 'indexRawToSemi']);
+        Route::get('recipes/semi-to-finished', [RecipeController::class, 'indexSemiToFinished']);
+
         Route::middleware('role:admin,manager,operator')->group(function () {
             Route::post('inventory/receive', [InventoryController::class, 'receiveRawMaterial']);
             Route::post('production/raw-to-semi', [ProductionController::class, 'rawToSemi']);
@@ -38,6 +42,13 @@ Route::middleware('web')->group(function () {
         });
 
         Route::middleware('role:admin,manager')->group(function () {
+            Route::post('recipes/raw-to-semi', [RecipeController::class, 'storeRawToSemi']);
+            Route::put('recipes/raw-to-semi/{rawToSemiRecipe}', [RecipeController::class, 'updateRawToSemi']);
+            Route::delete('recipes/raw-to-semi/{rawToSemiRecipe}', [RecipeController::class, 'destroyRawToSemi']);
+            Route::post('recipes/semi-to-finished', [RecipeController::class, 'storeSemiToFinished']);
+            Route::put('recipes/semi-to-finished/{semiToFinishedRecipe}', [RecipeController::class, 'updateSemiToFinished']);
+            Route::delete('recipes/semi-to-finished/{semiToFinishedRecipe}', [RecipeController::class, 'destroySemiToFinished']);
+
             Route::post('raw-materials', [RawMaterialController::class, 'store']);
             Route::put('raw-materials/{raw_material}', [RawMaterialController::class, 'update']);
             Route::patch('raw-materials/{raw_material}', [RawMaterialController::class, 'update']);
