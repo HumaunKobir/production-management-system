@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
+import { useAuth } from '../context/AuthContext';
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (!user) return;
     api.getDashboard()
       .then((res) => setData(res.data))
       .catch((e) => setError(e.message));
-  }, []);
+  }, [user]);
 
   if (error) {
     return <p className="error">{error}</p>;

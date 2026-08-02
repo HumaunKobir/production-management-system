@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
+import { useAuth } from '../context/AuthContext';
 
 export default function UsersPage() {
+  const { user } = useAuth();
   const [users, setUsers] = useState([]);
   const [error, setError] = useState('');
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'operator' });
@@ -12,7 +14,11 @@ export default function UsersPage() {
       .catch((e) => setError(e.message));
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    if (user) {
+      load();
+    }
+  }, [user]);
 
   const handleCreate = async (e) => {
     e.preventDefault();

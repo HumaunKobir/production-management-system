@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../api';
+import { useAuth } from '../context/AuthContext';
 
 export default function ProductionPage() {
+  const { user } = useAuth();
   const [history, setHistory] = useState([]);
   const [semiProducts, setSemiProducts] = useState([]);
   const [finishedProducts, setFinishedProducts] = useState([]);
@@ -70,7 +72,13 @@ export default function ProductionPage() {
     }
   };
 
-  if (!history.length && !semiProducts.length) {
+  useEffect(() => {
+    if (user) {
+      load();
+    }
+  }, [user]);
+
+  if (!history.length && !semiProducts.length && !error) {
     return (
       <div>
         <h2>Production</h2>

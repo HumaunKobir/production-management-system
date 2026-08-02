@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
+import { useAuth } from '../context/AuthContext';
 
 export default function InventoryPage() {
+  const { user } = useAuth();
   const [inventory, setInventory] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -21,8 +23,10 @@ export default function InventoryPage() {
   };
 
   useEffect(() => {
-    load();
-  }, []);
+    if (user) {
+      load();
+    }
+  }, [user]);
 
   const handleReceive = async (e) => {
     e.preventDefault();

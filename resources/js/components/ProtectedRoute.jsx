@@ -6,10 +6,10 @@ export default function ProtectedRoute({ children, permission = null }) {
   const location = useLocation();
 
   if (loading) {
-    return <div className="loading-screen">Loading...</div>;
+    return <div className="loading-screen">Checking authentication...</div>;
   }
 
-  if (!user && !loading) {
+  if (!user) {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 

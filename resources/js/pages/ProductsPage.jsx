@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../api';
+import { useAuth } from '../context/AuthContext';
 
 function ProductTable({ title, items, onCreate, onDelete }) {
   const [form, setForm] = useState({ name: '', sku: '', description: '', unit: '' });
@@ -41,6 +42,7 @@ function ProductTable({ title, items, onCreate, onDelete }) {
 }
 
 export default function ProductsPage() {
+  const { user } = useAuth();
   const [raw, setRaw] = useState([]);
   const [semi, setSemi] = useState([]);
   const [finished, setFinished] = useState([]);
@@ -62,7 +64,13 @@ export default function ProductsPage() {
     }
   };
 
-  if (!raw.length && !semi.length && !finished.length) {
+  useEffect(() => {
+    if (user) {
+      load();
+    }
+  }, [user]);
+
+  if (!raw.length && !semi.length && !finished.length && !error) {
     return (
       <div>
         <h2>Products</h2>

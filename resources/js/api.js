@@ -1,5 +1,11 @@
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
+let unauthorizedHandler = null;
+
+export function setUnauthorizedHandler(handler) {
+  unauthorizedHandler = handler;
+}
+
 function getApiUrl(path) {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   return `${API_BASE}${normalizedPath}`;
@@ -18,12 +24,23 @@ function getCsrfToken() {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
-async function request(path, options = {}) {
+async function ensureCsrf() {
+  if (!getCsrfToken()) {
+    await fetch(getCsrfCookieUrl(), { credentials: 'include' });
+  }
+}
+
+async function request(path, options = {}, isRetry = false) {
+  await ensureCsrf();
+
   const headers = {
-    'Content-Type': 'application/json',
     Accept: 'application/json',
     ...options.headers,
   };
+
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+  }
 
   const csrfToken = getCsrfToken();
   if (csrfToken) {
@@ -32,14 +49,20 @@ async function request(path, options = {}) {
 
   const response = await fetch(getApiUrl(path), {
     credentials: 'include',
-    headers,
     ...options,
+    headers,
   });
 
   if (response.status === 401) {
-    const error = new Error('Unauthenticated');
+    unauthorizedHandler?.();
+    const error = new Error('Unauthenticated. Please log in again.');
     error.status = 401;
     throw error;
+  }
+
+  if (response.status === 419 && !isRetry) {
+    await fetch(getCsrfCookieUrl(), { credentials: 'include' });
+    return request(path, options, true);
   }
 
   if (response.status === 204) {
@@ -49,7 +72,13 @@ async function request(path, options = {}) {
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    throw new Error(data?.message || `Request failed: ${response.status}`);
+    const message = data?.message
+      || data?.errors?.email?.[0]
+      || `Request failed: ${response.status}`;
+    const error = new Error(message);
+    error.status = response.status;
+    error.data = data;
+    throw error;
   }
 
   return data;
@@ -60,10 +89,16 @@ export const api = {
 
   login: async (body) => {
     await api.getCsrfCookie();
-    return request('/login', { method: 'POST', body: JSON.stringify(body) });
+    const result = await request('/login', { method: 'POST', body: JSON.stringify(body) });
+    await api.getCsrfCookie();
+    return result;
   },
 
-  logout: () => request('/logout', { method: 'POST' }),
+  logout: async () => {
+    await request('/logout', { method: 'POST' });
+    await api.getCsrfCookie();
+  },
+
   me: () => request('/me'),
   getDashboard: () => request('/dashboard'),
 
