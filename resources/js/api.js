@@ -1,4 +1,5 @@
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const BACKEND_BASE = import.meta.env.VITE_BACKEND_URL || (API_BASE.startsWith('http') ? API_BASE.replace(/\/api\/?$/, '') : window.location.origin);
 
 let unauthorizedHandler = null;
 
@@ -7,16 +8,13 @@ export function setUnauthorizedHandler(handler) {
 }
 
 function getApiUrl(path) {
+  const normalizedBase = API_BASE.replace(/\/$/, '');
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${API_BASE}${normalizedPath}`;
+  return `${normalizedBase}${normalizedPath}`;
 }
 
 function getCsrfCookieUrl() {
-  if (API_BASE.startsWith('http')) {
-    return API_BASE.replace(/\/api\/?$/, '') + '/sanctum/csrf-cookie';
-  }
-
-  return `${window.location.origin}/sanctum/csrf-cookie`;
+  return `${BACKEND_BASE.replace(/\/$/, '')}/sanctum/csrf-cookie`;
 }
 
 function getCsrfToken() {

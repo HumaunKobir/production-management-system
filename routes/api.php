@@ -14,8 +14,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('web')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
-
-    Route::middleware('auth')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('me', [AuthController::class, 'me']);
         Route::get('dashboard', [DashboardController::class, 'index']);
@@ -68,5 +66,4 @@ Route::middleware('web')->group(function () {
         Route::middleware('role:admin')->group(function () {
             Route::apiResource('users', UserController::class);
         });
-    });
 });

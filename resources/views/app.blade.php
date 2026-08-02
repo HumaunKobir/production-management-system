@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ config('app.name', 'Production Management System') }}</title>
     @viteReactRefresh
-    @vite(['resources/js/main.jsx'])
+    @vite(['resources/css/app.css', 'resources/js/main.jsx'])
 </head>
 <body>
     <div id="app"></div>
