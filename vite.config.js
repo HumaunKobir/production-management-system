@@ -13,6 +13,7 @@ export default defineConfig({
         react(),
     ],
     server: {
+        host: true,
         proxy: {
             '/api': {
                 target: BACKEND_URL,

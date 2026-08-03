@@ -1,5 +1,18 @@
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
-const BACKEND_BASE = import.meta.env.VITE_BACKEND_URL || (API_BASE.startsWith('http') ? API_BASE.replace(/\/api\/?$/, '') : window.location.origin);
+
+function resolveBackendBase() {
+  if (import.meta.env.VITE_BACKEND_URL) {
+    return import.meta.env.VITE_BACKEND_URL.replace(/\/$/, '');
+  }
+
+  if (API_BASE.startsWith('http')) {
+    return API_BASE.replace(/\/api\/?$/, '');
+  }
+
+  return window.location.origin;
+}
+
+const BACKEND_BASE = resolveBackendBase();
 
 let unauthorizedHandler = null;
 
@@ -14,7 +27,7 @@ function getApiUrl(path) {
 }
 
 function getCsrfCookieUrl() {
-  return `${BACKEND_BASE.replace(/\/$/, '')}/sanctum/csrf-cookie`;
+  return `${BACKEND_BASE}/sanctum/csrf-cookie`;
 }
 
 function getCsrfToken() {
@@ -22,14 +35,24 @@ function getCsrfToken() {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
-async function ensureCsrf() {
-  if (!getCsrfToken()) {
-    await fetch(getCsrfCookieUrl(), { credentials: 'include' });
+function isMutatingMethod(method = 'GET') {
+  const normalized = method.toUpperCase();
+  return normalized !== 'GET' && normalized !== 'HEAD' && normalized !== 'OPTIONS';
+}
+
+async function refreshCsrfCookie() {
+  await fetch(getCsrfCookieUrl(), { credentials: 'include' });
+}
+
+async function ensureCsrf(method = 'GET') {
+  if (isMutatingMethod(method) || !getCsrfToken()) {
+    await refreshCsrfCookie();
   }
 }
 
 async function request(path, options = {}, isRetry = false) {
-  await ensureCsrf();
+  const method = options.method || 'GET';
+  await ensureCsrf(method);
 
   const headers = {
     Accept: 'application/json',
@@ -51,16 +74,23 @@ async function request(path, options = {}, isRetry = false) {
     headers,
   });
 
+  if (response.status === 419 && !isRetry) {
+    await refreshCsrfCookie();
+    return request(path, options, true);
+  }
+
+  if (response.status === 401 && !isRetry) {
+    await refreshCsrfCookie();
+    return request(path, options, true);
+  }
+
   if (response.status === 401) {
-    unauthorizedHandler?.();
+    if (path === '/me') {
+      unauthorizedHandler?.();
+    }
     const error = new Error('Unauthenticated. Please log in again.');
     error.status = 401;
     throw error;
-  }
-
-  if (response.status === 419 && !isRetry) {
-    await fetch(getCsrfCookieUrl(), { credentials: 'include' });
-    return request(path, options, true);
   }
 
   if (response.status === 204) {
@@ -83,18 +113,18 @@ async function request(path, options = {}, isRetry = false) {
 }
 
 export const api = {
-  getCsrfCookie: () => fetch(getCsrfCookieUrl(), { credentials: 'include' }),
+  getCsrfCookie: refreshCsrfCookie,
 
   login: async (body) => {
-    await api.getCsrfCookie();
+    await refreshCsrfCookie();
     const result = await request('/login', { method: 'POST', body: JSON.stringify(body) });
-    await api.getCsrfCookie();
+    await refreshCsrfCookie();
     return result;
   },
 
   logout: async () => {
     await request('/logout', { method: 'POST' });
-    await api.getCsrfCookie();
+    await refreshCsrfCookie();
   },
 
   me: () => request('/me'),

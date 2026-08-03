@@ -1,12 +1,14 @@
 <?php
 
+$localOriginPattern = '#^https?://(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3})(:\d+)?$#';
+
 return [
     'paths' => ['api/*', 'sanctum/csrf-cookie'],
     'allowed_methods' => ['*'],
-    'allowed_origins' => array_filter(explode(',', env('CORS_ALLOWED_ORIGINS',
-        'http://127.0.0.1:8000,http://localhost:8000,http://127.0.0.1:8001,http://localhost:8001,http://127.0.0.1:5173,http://localhost:5173,http://127.0.0.1:5174,http://localhost:5174'
-    ))),
-    'allowed_origins_patterns' => [],
+    'allowed_origins' => array_filter(explode(',', env('CORS_ALLOWED_ORIGINS', ''))),
+    'allowed_origins_patterns' => env('APP_ENV', 'production') === 'local'
+        ? [$localOriginPattern]
+        : [],
     'allowed_headers' => ['*'],
     'exposed_headers' => [],
     'max_age' => 0,
