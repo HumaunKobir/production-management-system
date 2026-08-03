@@ -14,7 +14,6 @@ export function AuthProvider({ children }) {
 
   const refreshUser = useCallback(async () => {
     try {
-      await api.getCsrfCookie();
       const res = await api.me();
       setUser(res.user);
       return res.user;
@@ -30,11 +29,13 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let isMounted = true;
 
-    refreshUser().finally(() => {
-      if (isMounted) {
-        setLoading(false);
-      }
-    });
+    api.getCsrfCookie()
+      .then(() => refreshUser())
+      .finally(() => {
+        if (isMounted) {
+          setLoading(false);
+        }
+      });
 
     return () => {
       isMounted = false;

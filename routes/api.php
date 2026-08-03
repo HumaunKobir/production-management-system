@@ -42,6 +42,12 @@ Route::middleware('web')->group(function () {
         });
 
         Route::middleware('role:admin,manager')->group(function () {
+            Route::put('inventory/raw-material-batches/{rawMaterialBatch}', [InventoryController::class, 'updateRawMaterialBatch']);
+            Route::delete('inventory/raw-material-batches/{rawMaterialBatch}', [InventoryController::class, 'destroyRawMaterialBatch']);
+            Route::put('production/{productionBatch}', [ProductionController::class, 'update']);
+            Route::patch('production/{productionBatch}/status', [ProductionController::class, 'updateStatus']);
+            Route::delete('production/{productionBatch}', [ProductionController::class, 'destroy']);
+
             Route::post('recipes/raw-to-semi', [RecipeController::class, 'storeRawToSemi']);
             Route::put('recipes/raw-to-semi/{rawToSemiRecipe}', [RecipeController::class, 'updateRawToSemi']);
             Route::delete('recipes/raw-to-semi/{rawToSemiRecipe}', [RecipeController::class, 'destroyRawToSemi']);

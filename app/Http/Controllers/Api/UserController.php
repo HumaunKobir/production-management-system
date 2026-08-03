@@ -19,6 +19,11 @@ class UserController extends Controller
         ]);
     }
 
+    public function show(User $user): JsonResponse
+    {
+        return response()->json(['data' => $this->formatUser($user)]);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([

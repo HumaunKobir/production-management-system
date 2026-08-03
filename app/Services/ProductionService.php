@@ -228,4 +228,70 @@ class ProductionService
             'created_at' => now(),
         ]);
     }
+
+    public function updateBatch(ProductionBatch $batch, array $data): ProductionBatch
+    {
+        if (isset($data['batch_number']) && $batch->status !== ProductionStatus::Pending) {
+            throw new \InvalidArgumentException('Batch number can only be changed while pending.');
+        }
+
+        $batch->update($data);
+        $this->logEvent($batch, 'batch_updated', 'Production batch details updated.');
+
+        return $batch->fresh();
+    }
+
+    public function changeStatus(ProductionBatch $batch, ProductionStatus $newStatus): ProductionBatch
+    {
+        $allowed = match ($batch->status) {
+            ProductionStatus::Pending => [ProductionStatus::Failed, ProductionStatus::Processing],
+            ProductionStatus::Processing => [ProductionStatus::Failed],
+            ProductionStatus::Failed => [ProductionStatus::Pending],
+            ProductionStatus::Completed => [],
+        };
+
+        if (! in_array($newStatus, $allowed, true)) {
+            throw new \InvalidArgumentException(
+                "Cannot change status from {$batch->status->value} to {$newStatus->value}."
+            );
+        }
+
+        if ($newStatus === ProductionStatus::Failed) {
+            $batch->update([
+                'status' => ProductionStatus::Failed,
+                'failure_reason' => 'Cancelled or marked failed by user.',
+            ]);
+            $this->logEvent($batch, 'status_changed', 'Batch marked as failed.');
+
+            return $batch->fresh();
+        }
+
+        if ($newStatus === ProductionStatus::Pending && $batch->status === ProductionStatus::Failed) {
+            $batch->update([
+                'status' => ProductionStatus::Pending,
+                'failure_reason' => null,
+                'completed_at' => null,
+            ]);
+            $this->logEvent($batch, 'status_changed', 'Batch reset to pending for retry.');
+            ProcessProductionBatch::dispatch($batch->id)->onQueue('production');
+
+            return $batch->fresh();
+        }
+
+        if ($newStatus === ProductionStatus::Processing && $batch->status === ProductionStatus::Pending) {
+            $this->logEvent($batch, 'status_changed', 'Batch queued for processing.');
+            ProcessProductionBatch::dispatch($batch->id)->onQueue('production');
+        }
+
+        return $batch->fresh();
+    }
+
+    public function deleteBatch(ProductionBatch $batch): void
+    {
+        if (! in_array($batch->status, [ProductionStatus::Pending, ProductionStatus::Failed], true)) {
+            throw new \InvalidArgumentException('Only pending or failed batches can be deleted.');
+        }
+
+        $batch->delete();
+    }
 }

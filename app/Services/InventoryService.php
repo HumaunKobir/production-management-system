@@ -144,4 +144,40 @@ class InventoryService
 
         return $allocations;
     }
+
+    public function updateRawMaterialBatch(int $batchId, array $data): RawMaterialBatch
+    {
+        $batch = RawMaterialBatch::findOrFail($batchId);
+
+        if (isset($data['remaining_quantity'])) {
+            $remaining = (float) $data['remaining_quantity'];
+            if ($remaining < 0 || $remaining > (float) $batch->quantity) {
+                throw new \InvalidArgumentException('Remaining quantity must be between 0 and the original batch quantity.');
+            }
+            $batch->remaining_quantity = $remaining;
+        }
+
+        if (isset($data['batch_number'])) {
+            $batch->batch_number = $data['batch_number'];
+        }
+
+        $batch->save();
+
+        return $batch->fresh('rawMaterial');
+    }
+
+    public function deleteRawMaterialBatch(int $batchId): void
+    {
+        $batch = RawMaterialBatch::findOrFail($batchId);
+
+        if ($batch->productionInputs()->exists()) {
+            throw new \InvalidArgumentException('Cannot delete a batch that has been used in production.');
+        }
+
+        if ((float) $batch->remaining_quantity !== (float) $batch->quantity) {
+            throw new \InvalidArgumentException('Cannot delete a batch that has been partially consumed.');
+        }
+
+        $batch->delete();
+    }
 }

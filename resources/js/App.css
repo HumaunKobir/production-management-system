@@ -101,6 +101,41 @@ button {
 button:hover { background: #16213e; }
 button.danger { background: #e94560; }
 button.danger:hover { background: #c73a52; }
+button.btn-secondary { background: #6c757d; }
+button.btn-secondary:hover { background: #5a6268; }
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.actions input { min-width: 120px; }
+
+.nested-table {
+  margin: 0.5rem 0;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.nested-table th,
+.nested-table td {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+.status-select {
+  padding: 0.2rem 0.4rem;
+  font-size: 0.85rem;
+  border-radius: 6px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.5rem;
+}
 
 .error { color: #e94560; margin: 0.5rem 0; }
 .success { color: #2ecc71; margin: 0.5rem 0; }

@@ -81,4 +81,55 @@ class ProductionController extends Controller
             return response()->json(['message' => $e->getMessage()], 422);
         }
     }
+
+    public function update(Request $request, ProductionBatch $productionBatch): JsonResponse
+    {
+        $validated = $request->validate([
+            'notes' => 'nullable|string',
+            'batch_number' => 'sometimes|string|max:100|unique:production_batches,batch_number,'.$productionBatch->id,
+        ]);
+
+        try {
+            $batch = $this->productionService->updateBatch($productionBatch, $validated);
+
+            return response()->json([
+                'message' => 'Production batch updated.',
+                'data' => $batch,
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function updateStatus(Request $request, ProductionBatch $productionBatch): JsonResponse
+    {
+        $validated = $request->validate([
+            'status' => ['required', \Illuminate\Validation\Rule::enum(\App\Enums\ProductionStatus::class)],
+        ]);
+
+        try {
+            $batch = $this->productionService->changeStatus(
+                $productionBatch,
+                \App\Enums\ProductionStatus::from($validated['status']),
+            );
+
+            return response()->json([
+                'message' => 'Production status updated.',
+                'data' => $batch,
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function destroy(ProductionBatch $productionBatch): JsonResponse
+    {
+        try {
+            $this->productionService->deleteBatch($productionBatch);
+
+            return response()->json(null, 204);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
 }

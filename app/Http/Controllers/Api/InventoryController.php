@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\RawMaterialBatch;
 use App\Services\InventoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -33,5 +34,32 @@ class InventoryController extends Controller
         );
 
         return response()->json(['data' => $batch->load('rawMaterial')], 201);
+    }
+
+    public function updateRawMaterialBatch(Request $request, RawMaterialBatch $rawMaterialBatch): JsonResponse
+    {
+        $validated = $request->validate([
+            'batch_number' => 'sometimes|string|max:100|unique:raw_material_batches,batch_number,'.$rawMaterialBatch->id,
+            'remaining_quantity' => 'sometimes|numeric|min:0',
+        ]);
+
+        try {
+            $batch = $this->inventoryService->updateRawMaterialBatch($rawMaterialBatch->id, $validated);
+
+            return response()->json(['data' => $batch]);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function destroyRawMaterialBatch(RawMaterialBatch $rawMaterialBatch): JsonResponse
+    {
+        try {
+            $this->inventoryService->deleteRawMaterialBatch($rawMaterialBatch->id);
+
+            return response()->json(null, 204);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
     }
 }
