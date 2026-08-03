@@ -17,17 +17,25 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+
+        if (! Auth::attempt($credentials)) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
 
-        $request->session()->regenerate();
+
+        $user = Auth::user();
+
+
+        // create sanctum token
+        $token = $user->createToken('react-app')->plainTextToken;
+
 
         return response()->json([
             'message' => 'Logged in successfully.',
-            'user' => $this->formatUser($request->user()),
+            'user' => $this->formatUser($user),
+            'token' => $token,
         ]);
     }
 

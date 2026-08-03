@@ -11,9 +11,31 @@ function getBackendBase() {
 
 let unauthorizedHandler = null;
 let csrfRefreshPromise = null;
+const AUTH_TOKEN_STORAGE_KEY = 'pms-auth-token';
 
 export function setUnauthorizedHandler(handler) {
   unauthorizedHandler = handler;
+}
+
+function getStoredToken() {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  return window.localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
+}
+
+function persistToken(token) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  if (token) {
+    window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
+    return;
+  }
+
+  window.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
 }
 
 function getApiUrl(path) {
@@ -69,6 +91,11 @@ async function request(path, options = {}, isRetry = false) {
     headers['Content-Type'] = headers['Content-Type'] || 'application/json';
   }
 
+  const token = getStoredToken();
+  if (token && !headers.Authorization) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
   const csrfToken = getCsrfToken();
   if (csrfToken) {
     headers['X-XSRF-TOKEN'] = csrfToken;
@@ -86,6 +113,8 @@ async function request(path, options = {}, isRetry = false) {
   }
 
   if (response.status === 401) {
+    persistToken(null);
+
     if (path === '/me') {
       unauthorizedHandler?.();
     }
@@ -119,12 +148,14 @@ export const api = {
   login: async (body) => {
     await refreshCsrfCookie();
     const result = await request('/login', { method: 'POST', body: JSON.stringify(body) });
+    persistToken(result?.token || null);
     await refreshCsrfCookie();
     return result;
   },
 
   logout: async () => {
     await request('/logout', { method: 'POST' });
+    persistToken(null);
     await refreshCsrfCookie();
   },
 
