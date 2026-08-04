@@ -2,6 +2,16 @@
 
 A manufacturing production management system built with Laravel, MySQL, RabbitMQ, and React. It supports a three-stage production workflow (raw materials → semi-finished → finished products) with batch traceability and event-driven inventory processing.
 
+## Documentation
+
+Full install and workflow guides are in the **[readme/](./readme/)** folder:
+
+| Guide | Description |
+|-------|-------------|
+| [readme/README.md](./readme/README.md) | Documentation index |
+| [readme/INSTALLATION.md](./readme/INSTALLATION.md) | Docker & local install, prerequisites, troubleshooting |
+| [readme/WORKFLOW.md](./readme/WORKFLOW.md) | Step-by-step: products → recipes → inventory → production → traceability |
+
 ## Architecture
 
 ```
@@ -63,11 +73,14 @@ Session-based auth via **Laravel Sanctum** with role-based access control.
 | `/` | Public home page |
 | `/login` | Admin login |
 | `/admin` | Dashboard (authenticated) |
-| `/admin/inventory` | All roles |
-| `/admin/products` | Admin, Manager |
-| `/admin/production` | All roles |
+| `/admin/inventory` | All roles — list; receive/edit batches |
+| `/admin/products` | Admin, Manager — list / create / edit |
+| `/admin/recipes` | Admin, Manager — link products (BOM) |
+| `/admin/production` | All roles — list / start / status |
 | `/admin/traceability` | All roles |
 | `/admin/users` | Admin only |
+
+See [readme/WORKFLOW.md](./readme/WORKFLOW.md) for the complete UI route map.
 
 Run migrations and seed after pulling:
 
@@ -151,6 +164,8 @@ Tests cover: authentication, inventory receive, production flow, insufficient in
 
 ## Example Workflow
 
+See **[readme/WORKFLOW.md](./readme/WORKFLOW.md)** for the full business workflow with UI steps.
+
 ```bash
 # 1. Check inventory
 curl http://localhost:8000/api/inventory
@@ -188,21 +203,29 @@ curl http://localhost:8000/api/traceability/finished-batch/1
 
 ## Local Development (without Docker)
 
+See **[readme/INSTALLATION.md](./readme/INSTALLATION.md)** for the full procedure. Quick start:
+
 ```bash
 composer install
 npm install
 cp .env.example .env
 php artisan key:generate
-# Configure MySQL and RabbitMQ in .env
+# Configure MySQL in .env — use port 8001 if 8000 is taken
 php artisan migrate --seed
+php artisan config:clear
 
-# Terminal 1: Laravel + Vite dev server
-php artisan serve
+# Terminal 1
+php artisan serve --port=8001
+
+# Terminal 2
 npm run dev
 
-# Terminal 2: Queue worker
+# Terminal 3 — required for production to complete
 php artisan queue:work rabbitmq --queue=production
+# Or: php artisan queue:work --queue=production  (if QUEUE_CONNECTION=database)
 ```
+
+Open http://127.0.0.1:8001/login
 
 ### Frontend Structure
 
