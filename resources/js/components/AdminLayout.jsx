@@ -19,6 +19,7 @@ export default function AdminLayout() {
           <NavLink to="/admin" end>Dashboard</NavLink>
           <NavLink to="/admin/inventory">Inventory</NavLink>
           {can('manage_products') && <NavLink to="/admin/products">Products</NavLink>}
+          {can('manage_products') && <NavLink to="/admin/recipes">Recipes</NavLink>}
           <NavLink to="/admin/production">Production</NavLink>
           <NavLink to="/admin/traceability">Traceability</NavLink>
           {can('manage_users') && <NavLink to="/admin/users">Users</NavLink>}

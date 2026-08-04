@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 export default function LoginPage() {
   const { login, isAuthenticated, loading } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const [form, setForm] = useState({ email: '', password: '' });
@@ -22,8 +24,10 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       await login(form.email, form.password);
+      toast.success('Logged in successfully.');
       navigate(from, { replace: true });
     } catch (err) {
+      toast.error(err.message || 'Login failed.');
       setError(err.message || 'Login failed.');
     } finally {
       setSubmitting(false);

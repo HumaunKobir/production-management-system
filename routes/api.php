@@ -30,6 +30,7 @@ Route::middleware('web')->group(function () {
 
         Route::get('production', [ProductionController::class, 'index']);
         Route::get('production/{productionBatch}', [ProductionController::class, 'show']);
+        Route::get('traceability/finished-batches', [TraceabilityController::class, 'index']);
         Route::get('traceability/finished-batch/{finishedProductBatch}', [TraceabilityController::class, 'traceFinishedBatch']);
 
         Route::get('recipes/raw-to-semi', [RecipeController::class, 'indexRawToSemi']);

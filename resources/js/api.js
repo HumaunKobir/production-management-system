@@ -195,5 +195,16 @@ export const api = {
   startRawToSemi: (body) => request('/production/raw-to-semi', { method: 'POST', body: JSON.stringify(body) }),
   startSemiToFinished: (body) => request('/production/semi-to-finished', { method: 'POST', body: JSON.stringify(body) }),
 
+  getFinishedProductBatches: () => request('/traceability/finished-batches'),
   traceFinishedBatch: (id) => request(`/traceability/finished-batch/${id}`),
+
+  getRawToSemiRecipes: () => request('/recipes/raw-to-semi'),
+  createRawToSemiRecipe: (body) => request('/recipes/raw-to-semi', { method: 'POST', body: JSON.stringify(body) }),
+  updateRawToSemiRecipe: (id, body) => request(`/recipes/raw-to-semi/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  deleteRawToSemiRecipe: (id) => request(`/recipes/raw-to-semi/${id}`, { method: 'DELETE' }),
+
+  getSemiToFinishedRecipes: () => request('/recipes/semi-to-finished'),
+  createSemiToFinishedRecipe: (body) => request('/recipes/semi-to-finished', { method: 'POST', body: JSON.stringify(body) }),
+  updateSemiToFinishedRecipe: (id, body) => request(`/recipes/semi-to-finished/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  deleteSemiToFinishedRecipe: (id) => request(`/recipes/semi-to-finished/${id}`, { method: 'DELETE' }),
 };
